@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cat Parent Handbook</title>
+  <style>
+    :root {
+      --paper: #fff9ee;
+      --page: #f3ead7;
+      --ink: #2e2821;
+      --muted: #766b5e;
+      --line: #dac9ad;
+      --tab: #fffef8;
+      --mint: #7bb89f;
+      --sky: #8bb6d9;
+      --rose: #e98b86;
+      --sun: #f3c766;
+      --leaf: #5f8f73;
+      --navy: #33526c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18px 18px, rgba(46,40,33,.07) 0 2px, transparent 3px),
+        linear-gradient(180deg, #fbf3e4, var(--page));
+      background-size: 34px 34px, auto;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      line-height: 1.58;
+    }
+
+    a { color: inherit; }
+
+    .book {
+      width: min(1180px, calc(100vw - 28px));
+      margin: 0 auto;
+      padding: 28px 0 72px;
+    }
+
+    .cover {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 30px;
+      min-height: 330px;
+      padding: 34px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: 8px 8px 0 rgba(46,40,33,.13);
+      overflow: hidden;
+    }
+
+    .cover::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(123,184,159,.24) 0 16px, transparent 16px),
+        linear-gradient(180deg, transparent 0 78%, rgba(243,199,102,.26) 78%);
+      pointer-events: none;
+    }
+
+    .cover > * { position: relative; }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 4px 10px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: var(--sun);
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 18px 0 12px;
+      max-width: 760px;
+      font-size: clamp(34px, 6vw, 62px);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .intro {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .passport {
+      align-self: stretch;
+      padding: 18px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: #fffdf8;
+      box-shadow: 4px 4px 0 rgba(46,40,33,.13);
+    }
+
+    .photo {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 136px;
+      height: 188px;
+      margin: 0 auto;
+      border: 2px dashed #bba783;
+      border-radius: 8px;
+      background: #f7eddb;
+      overflow: hidden;
+      cursor: pointer;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      user-select: none;
+      display: none;
+    }
+
+    .photo input { display: none; }
+
+    .photo-wrap {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+    }
+
+    .photo-change {
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      padding: 6px 10px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .crop-dialog {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(46, 40, 33, .45);
+    }
+
+    .crop-dialog.is-open { display: grid; }
+
+    .crop-panel {
+      width: min(420px, 100%);
+      padding: 18px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: #fffdf8;
+      box-shadow: 6px 6px 0 rgba(46,40,33,.16);
+    }
+
+    .crop-panel h2 {
+      margin: 0 0 12px;
+      font-size: 20px;
+    }
+
+    .crop-stage {
+      position: relative;
+      width: 204px;
+      height: 282px;
+      margin: 0 auto;
+      overflow: hidden;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: #f7eddb;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .crop-stage:active { cursor: grabbing; }
+
+    .crop-stage img {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      max-width: none;
+      user-select: none;
+      pointer-events: none;
+      transform: translate(calc(-50% + var(--crop-x, 0px)), calc(-50% + var(--crop-y, 0px))) scale(var(--crop-scale, 1));
+      transform-origin: center;
+    }
+
+    .crop-tools {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .crop-tools input {
+      width: 100%;
+      accent-color: var(--leaf);
+    }
+
+    .crop-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .crop-actions button {
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .crop-actions .primary {
+      background: var(--leaf);
+      color: #fff;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .field input {
+      width: 100%;
+      min-height: 34px;
+      padding: 7px 8px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fffaf1;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+    }
+
+    .lang {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .pill, nav a, .open {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 6px 11px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: #fffdf8;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 2px 2px 0 rgba(46,40,33,.12);
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 18px 0;
+      background: rgba(243,234,215,.94);
+      backdrop-filter: blur(10px);
+    }
+
+    section {
+      margin-top: 34px;
+      padding: 30px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: var(--tab);
+      box-shadow: 6px 6px 0 rgba(46,40,33,.11);
+    }
+
+    .section-head {
+      display: flex;
+      gap: 16px;
+      align-items: end;
+      justify-content: space-between;
+      margin-bottom: 26px;
+      border-bottom: 2px solid var(--line);
+      padding-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: 0;
+    }
+
+    .note {
+      max-width: 520px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .routes, .qa-grid, .source-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .route-card, .qa, .source {
+      padding: 20px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: #fffaf1;
+    }
+
+    .route-card:nth-child(2n), .qa:nth-child(3n+2), .source:nth-child(3n+2) { background: #eef7f1; }
+    .route-card:nth-child(3n), .qa:nth-child(3n), .source:nth-child(3n) { background: #eef6fb; }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      margin-bottom: 10px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #ffffffa8;
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 900;
+      border: 1px solid rgba(46,40,33,.2);
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    li + li { margin-top: 6px; }
+
+    .q {
+      margin: 0 0 12px;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .a {
+      margin: 0;
+      color: #443c34;
+      font-size: 15px;
+    }
+
+    .source-link {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .qa-tags {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: -6px 0 24px;
+    }
+
+    .qa-tags a {
+      display: inline-flex;
+      min-height: 34px;
+      align-items: center;
+      padding: 6px 12px;
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      background: #fffaf1;
+      font-size: 13px;
+      font-weight: 900;
+      text-decoration: none;
+      box-shadow: 2px 2px 0 rgba(46,40,33,.12);
+    }
+
+    .qa-category + .qa-category {
+      margin-top: 34px;
+      padding-top: 28px;
+      border-top: 2px dashed var(--line);
+    }
+
+    .qa-category h3 {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      margin: 0 0 16px;
+      padding: 6px 13px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: var(--sun);
+      box-shadow: 3px 3px 0 rgba(46,40,33,.12);
+    }
+
+    .qa-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .qa {
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .qa .source-link {
+      margin-top: auto;
+      padding-top: 18px;
+    }
+
+    .open {
+      min-height: 31px;
+      padding: 5px 9px;
+      border-width: 1px;
+      box-shadow: none;
+      font-size: 12px;
+      background: #fff;
+    }
+
+    .source h3 { min-height: 46px; }
+
+    .notes-board {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .notes-panel {
+      padding: 18px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: #fffaf1;
+    }
+
+    .notes-panel textarea {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffdf8;
+      color: var(--ink);
+      font: inherit;
+    }
+
+    .notes-status {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    footer {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 960px) {
+      .cover { grid-template-columns: 1fr; }
+      .routes, .source-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .qa-grid { grid-template-columns: 1fr; }
+      .notes-board { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .book { width: min(100vw - 18px, 1180px); }
+      .cover, section { padding: 18px; }
+      .routes, .qa-grid, .source-grid { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+      .note { margin-top: 8px; }
+      nav { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <main class="book">
+    <header class="cover">
+      <div>
+        <span class="label">Cat Parent Handbook</span>
+        <h1>Cat Parent Management Handbook</h1>
+        <p class="intro">This is not just a file directory. It turns the `cat` knowledge space into caregiver questions you will actually face: when to schedule checkups, how to feed, how to set up the home, how to detect pain, how to prevent multi-cat tension, and when a veterinarian should be involved.</p>
+        <div class="lang">
+          <a class="pill" href="#qa">Go to Q&A</a>
+          <a class="pill" href="#sources">Open source files</a>
+        </div>
+      </div>
+      <aside class="passport" aria-label="Cat ID card">
+        <div class="photo-wrap">
+          <label class="photo">
+            <input id="photoInput" type="file" accept="image/*">
+            <span id="photoText">Upload cat photo</span>
+            <img id="photoPreview" alt="Cat photo preview">
+          </label>
+          <button class="photo-change" id="photoChange" type="button">Change Photo</button>
+        </div>
+        <div class="fields">
+          <label class="field">Name<input data-save="catName" placeholder="e.g. Mochi"></label>
+          <label class="field">Age<input data-save="catAge" placeholder="e.g. 8 months"></label>
+          <label class="field">Weight<input data-save="catWeight" placeholder="e.g. 3.6 kg"></label>
+          <label class="field">Care focus<input data-save="catFocus" placeholder="e.g. food transition"></label>
+        </div>
+      </aside>
+    </header>
+
+    <div class="crop-dialog" id="photoCropDialog" aria-hidden="true">
+      <div class="crop-panel" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
+        <h2 id="cropTitle">Crop Cat Photo</h2>
+        <div class="crop-stage" id="cropStage"><img id="cropImage" alt="Photo to crop"></div>
+        <label class="crop-tools">Photo zoom
+          <input id="cropScale" type="range" min="1" max="3" step="0.01" value="1">
+          <span>Drag to position the photo. Confirm to save only this ID-photo area.</span>
+        </label>
+        <div class="crop-actions"><button type="button" id="cropCancel">Cancel</button><button type="button" class="primary" id="cropApply">Use Photo</button></div>
+      </div>
+    </div>
+
+    <nav aria-label="Page navigation">
+      <a href="#care-map">Care Journey</a>
+      <a href="#qa">New Parent Q&A</a>
+      <a href="#playbook">Task Index</a>
+      <a href="#sources">Source Files</a>
+    </nav>
+
+    <section id="care-map">
+      <div class="section-head">
+        <h2>Care Journey</h2>
+        <p class="note">Instead of a generic age timeline, this section is organized around the care responsibilities a cat parent takes on over time.</p>
+      </div>
+      <div class="routes">
+        <article class="route-card">
+          <span class="badge">Before adoption</span>
+          <h3>Make the home manageable first</h3>
+          <ul>
+            <li>Prepare a safe room, litter box, water station, scratching area, hiding place, and resting spots.</li>
+            <li>Plan the first exam, vaccines, parasite prevention, spay/neuter timing, and emergency clinic.</li>
+            <li>For multi-cat homes, read the new-cat introduction guidance before any direct meeting.</li>
+          </ul>
+        </article>
+        <article class="route-card">
+          <span class="badge">0-1 year</span>
+          <h3>Kittens need immunity, growth support, and social learning</h3>
+          <ul>
+            <li>Kittens are more infection-prone; the vaccine series and 6-month booster matter.</li>
+            <li>Use kitten/growth-stage complete diets and transition foods over 7-10 days.</li>
+            <li>Start carrier training, tooth brushing, nail trims, and calm feeding routines early.</li>
+          </ul>
+        </article>
+        <article class="route-card">
+          <span class="badge">1-6 years</span>
+          <h3>Young adults need durable routines</h3>
+          <ul>
+            <li>Schedule at least annual exams and record weight, body condition, and muscle condition.</li>
+            <li>Use small meals, puzzle feeding, and measured portions to prevent obesity.</li>
+            <li>Treat oral changes, urination changes, and behavior shifts as health signals.</li>
+          </ul>
+        </article>
+        <article class="route-card">
+          <span class="badge">7-10 years</span>
+          <h3>Mature adults need earlier screening</h3>
+          <ul>
+            <li>Watch kidneys, blood pressure, dental disease, urinary signs, weight, and chronic pain.</li>
+            <li>Litter boxes should be large enough and easy to enter for painful or aging cats.</li>
+            <li>Discuss monitoring plans with a veterinarian before long-term medications.</li>
+          </ul>
+        </article>
+        <article class="route-card">
+          <span class="badge">10+ years</span>
+          <h3>Seniors need comfort and trend management</h3>
+          <ul>
+            <li>Senior guidelines recommend more frequent reassessment, often at least every 6 months.</li>
+            <li>Look beyond body weight: muscle loss, pain, frailty, and cognition also matter.</li>
+            <li>Night vocalization, house-soiling, and reduced activity may reflect disease or pain.</li>
+          </ul>
+        </article>
+        <article class="route-card">
+          <span class="badge">Any age</span>
+          <h3>Uncertainty and emergencies need a veterinarian</h3>
+          <ul>
+            <li>Urinary blockage, breathing trouble, seizures, poisoning, persistent vomiting, trauma, or not eating cannot wait.</li>
+            <li>FIP, stones, and chronic pain cannot be judged from one symptom alone.</li>
+            <li>The handbook helps you ask better questions; it does not replace diagnosis.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="qa">
+      <div class="section-head">
+        <h2>New Parent Q&A</h2>
+        <p class="note">These points were selected because they are practical, easy to miss, and harder to get from generic search snippets.</p>
+      </div>
+      <div class="qa-tags">
+        <a href="#qa-food">Feeding</a>
+        <a href="#qa-home">Home & Behavior</a>
+        <a href="#qa-medical">Medical Prevention</a>
+        <a href="#qa-senior">Mature & Senior Care</a>
+        <a href="#qa-risk">Disease Risk</a>
+      </div>
+
+      <div class="qa-category" id="qa-food">
+        <h3>Feeding</h3>
+        <div class="qa-grid">
+          <article class="qa"><p class="q">Q1: What is the first thing people miss when choosing food?</p><p class="a">It is not “grain-free” or “high protein.” First confirm that the food is complete and balanced for the cat's current stage. The guidelines recommend diets with a nutritional adequacy statement and caution against using treats, supplements, or non-sterilized raw foods as the sole diet.</p><div class="source-link"><a class="open" href="index/quimby-et-al-2021-2021-aaha-aafp-feline-life-stage-guidelines.pdf" data-passage="No matter the life stage, to help avoid potential nutrient insufficiencies">Nutrition section</a></div></article>
+          <article class="qa"><p class="q">Q2: Why is leaving one bowl out all day not ideal?</p><p class="a">Cats naturally tend to eat small meals, frequently, and alone. The AAFP feeding statement notes that one or two large meals, or unlimited easy food access, can reduce foraging behavior and contribute to boredom, stress, and overeating.</p><div class="source-link"><a class="open" href="index/sadek-et-al-2018-feline-feeding-programs-addressing-behavioural-needs-to-improve-feline-health-and-wellbeing.pdf" data-passage="Cats are solitary predators that consume small prey">Feeding programs</a></div></article>
+          <article class="qa"><p class="q">Q3: Are treats allowed?</p><p class="a">Yes, but the feeding guidelines give a useful limit: treats should provide no more than 10% of daily calories. More than that can unbalance the diet and interfere with weight loss or therapeutic urinary diets.</p><div class="source-link"><a class="open" href="index/sadek-et-al-2018-feline-feeding-programs-addressing-behavioural-needs-to-improve-feline-health-and-wellbeing.pdf" data-passage="Cats are solitary predators that consume small prey">Feeding programs</a></div></article>
+          <article class="qa"><p class="q">Q4: Why should food transitions be gradual?</p><p class="a">The life-stage guidelines recommend transitioning diets over 7-10 days. This gives you time to watch for soft stool, vomiting, refusal to eat, and stress. Kittens, sensitive cats, and therapeutic diets especially should not be switched abruptly.</p><div class="source-link"><a class="open" href="index/quimby-et-al-2021-2021-aaha-aafp-feline-life-stage-guidelines.pdf" data-passage="four distinct age-related stages (kitten, young adult, mature adult, and senior)">Care stage guidelines</a></div></article>
+        </div>
+      </div>
+
+      <div class="qa-category" id="qa-home">
+        <h3>Home & Behavior</h3>
+        <div class="qa-grid">
+          <article class="qa"><p class="q">Q5: How big should a litter box be?</p><p class="a">A specific but often missed guideline: the box should be at least 1.5 times the cat's length from nose to tail tip. Many commercial boxes are too small, especially for mature, senior, painful, or urinary-problem cats.</p><div class="source-link"><a class="open" href="index/quimby-et-al-2021-2021-aaha-aafp-feline-life-stage-guidelines.pdf" data-passage="the litter box be at least one and a half times">Elimination section</a></div></article>
+          <article class="qa"><p class="q">Q6: What do multi-cat homes commonly misread?</p><p class="a">They assume there is no conflict because there is no fighting. The 2024 intercat tension guidelines highlight subtle signs such as staring, blocking, guarding resources, avoiding, and freezing. Some house-soiling happens because one cat blocks another cat's route to the litter box.</p><div class="source-link"><a class="open" href="index/rodan-et-al-2024-2024-aafp-intercat-tension-guidelines-recognition-prevention-and-management.pdf" data-passage="Signs can be subtle, such as staring or blocking">Intercat tension</a></div></article>
+          <article class="qa"><p class="q">Q7: If a cat seems lonely, should I get another cat?</p><p class="a">Not automatically. The intercat tension guidelines list “cats get lonely and need a companion” as a common myth. A second cat may help or may create chronic stress; individual temperament, resource distribution, and gradual introduction matter.</p><div class="source-link"><a class="open" href="index/rodan-et-al-2024-2024-aafp-intercat-tension-guidelines-recognition-prevention-and-management.pdf" data-passage="Signs can be subtle, such as staring or blocking">Intercat tension</a></div></article>
+          <article class="qa"><p class="q">Q8: If two cats play roughly, should I separate them immediately?</p><p class="a">Not always. The intercat tension guidelines separate play from conflict: role-switching and brief chasing may be play; one-way pursuit, freezing, hiding, hissing, blocking, or tufts of fur suggest tension and need intervention.</p><div class="source-link"><a class="open" href="index/rodan-et-al-2024-2024-aafp-intercat-tension-guidelines-recognition-prevention-and-management.pdf" data-passage="Is it play or fighting?">Relationship signs</a></div></article>
+        </div>
+      </div>
+
+      <div class="qa-category" id="qa-medical">
+        <h3>Medical Prevention</h3>
+        <div class="qa-grid">
+          <article class="qa"><p class="q">Q9: Why shouldn't care plans be based on age alone?</p><p class="a">AAHA/AAFP groups cats into kitten, young adult, mature adult, senior, and end-of-life stages, but age is only a starting point. Each visit should reassess body condition, muscle condition, behavior, disease risks, and the home environment.</p><div class="source-link"><a class="open" href="index/quimby-et-al-2021-2021-aaha-aafp-feline-life-stage-guidelines.pdf" data-passage="four distinct age-related stages (kitten, young adult, mature adult, and senior)">Care stage guidelines</a></div></article>
+          <article class="qa"><p class="q">Q10: Are vaccines just a yearly full set?</p><p class="a">No. Vaccination guidelines separate core and non-core vaccines; non-core vaccines depend on exposure risk. A vaccine visit should also include a physical exam, risk assessment, and caregiver education.</p><div class="source-link"><a class="open" href="index/stone-et-al-2020-2020-aaha-aafp-feline-vaccination-guidelines.pdf" data-passage="Vaccination is a medical procedure">Vaccination</a></div></article>
+          <article class="qa"><p class="q">Q11: What do caregivers often do wrong at the vet?</p><p class="a">Cat friendly interaction guidance centers on perceived control. Avoid forcing the cat out of the carrier, staring into the cat's face, holding the cat tightly to comfort them, or making shushing sounds that may resemble hissing.</p><div class="source-link"><a class="open" href="index/rodan-et-al-2022-2022-aafp-isfm-cat-friendly-veterinary-interaction-guidelines-approach-and-handling-techniques.pdf" data-passage="giving them a perceived sense of control">Cat friendly visits</a></div></article>
+          <article class="qa"><p class="q">Q12: Does a normal appetite mean the mouth is healthy?</p><p class="a">No. The 2025 oral health guidelines specifically warn that appetite changes are uncommon in cats with oral and dental disease. Drooling, one-sided chewing, bad breath, face sensitivity, or reduced activity deserve evaluation.</p><div class="source-link"><a class="open" href="index/lobprise-et-al-2025-2025-felinevma-feline-oral-health-and-dental-care-guidelines.pdf" data-passage="a normal appetite does not always equate with a healthy mouth">Oral health</a></div></article>
+        </div>
+      </div>
+
+      <div class="qa-category" id="qa-senior">
+        <h3>Mature & Senior Care</h3>
+        <div class="qa-grid">
+          <article class="qa"><p class="q">Q13: Why isn't senior care just “eat less and move less”?</p><p class="a">Senior care is trend-based: weight, muscle, blood pressure, pain, cognition, chronic disease, and quality of life. Some senior cats need more calories to maintain condition, so mechanical food restriction can be harmful.</p><div class="source-link"><a class="open" href="index/ray-et-al-2021-2021-aafp-feline-senior-care-guidelines.pdf" data-passage="Routine assessment facilitates health maintenance and early detection of disease">Senior care</a></div></article>
+          <article class="qa"><p class="q">Q14: Is night vocalization in an older cat just clinginess?</p><p class="a">Do not assume that. The life-stage guidelines note that night vocalization may reflect hearing or vision decline, cognitive dysfunction, pain, hyperthyroidism, or hypertension, so it deserves medical context.</p><div class="source-link"><a class="open" href="index/quimby-et-al-2021-2021-aaha-aafp-feline-life-stage-guidelines.pdf" data-passage="Vocalization, especially night - time waking, is a common concern">Senior behavior</a></div></article>
+          <article class="qa"><p class="q">Q15: Can I buy pain medicine for my cat myself?</p><p class="a">No. NSAID guidance stresses that cats have unique metabolism, and chronic pain often overlaps with kidney disease or other comorbidities. Long-term pain control needs prescription choice, screening, efficacy checks, and adverse-effect monitoring.</p><div class="source-link"><a class="open" href="index/taylor-et-al-2024-2024-isfm-and-aafp-consensus-guidelines-on-the-long-term-use-of-nsaids-in-cats.pdf" data-passage="The cat’s unique metabolism should be considered when prescribing any medications">NSAIDs</a></div></article>
+          <article class="qa"><p class="q">Q16: Why track muscle, not just body weight, in older cats?</p><p class="a">The life-stage guidelines recommend recording weight, body condition, and muscle condition throughout life. Older cats can lose muscle even when weight changes slowly; photos and serial records help reveal subtle trends.</p><div class="source-link"><a class="open" href="index/ray-et-al-2021-2021-aafp-feline-senior-care-guidelines.pdf" data-passage="Unexplained trends in body weight, body condition score">Senior assessment</a></div></article>
+        </div>
+      </div>
+
+      <div class="qa-category" id="qa-risk">
+        <h3>Disease Risk</h3>
+        <div class="qa-grid">
+          <article class="qa"><p class="q">Q17: Do urinary stones always need surgery?</p><p class="a">Not always. The urolithiasis statement notes that struvite bladder stones are often dissolvable with the right therapeutic diet, while calcium oxalate stones are not. Stone type and location require imaging, urinalysis, and veterinary assessment.</p><div class="source-link"><a class="open" href="index/Urolithiasis-Consensus-Statement-FINAL.pdf" data-passage="Struvite stones are readily dissolvable">Urolithiasis</a></div></article>
+          <article class="qa"><p class="q">Q18: Why can't urinary therapeutic diets be mixed freely?</p><p class="a">The urolithiasis statement notes that dissolution diets have specific composition goals and should be fed as 100% of the diet or only with compatible treats. Mixing foods can undermine urine pH and mineral-control targets.</p><div class="source-link"><a class="open" href="index/Urolithiasis-Consensus-Statement-FINAL.pdf" data-passage="They should be fed as 100% of the cat’s diet">Therapeutic diet</a></div></article>
+          <article class="qa"><p class="q">Q19: Can one test diagnose FIP?</p><p class="a">The FIP guidelines emphasize building suspicion “brick by brick”: history, age, source, physical findings, effusion, imaging, laboratory data, and viral testing all have to fit together. No single result replaces the full diagnostic picture.</p><div class="source-link"><a class="open" href="index/thayer-et-al-2022-2022-aafp-everycat-feline-infectious-peritonitis-diagnosis-guidelines.pdf" data-passage="build the index of suspicion 'brick by brick'">FIP diagnosis</a></div></article>
+          <article class="qa"><p class="q">Q20: Can a household with immunocompromised people have a cat?</p><p class="a">Usually the answer is not a simple yes or no; it is risk management. The zoonoses guidelines recommend collaboration among veterinarians, caregivers, and physicians, using preventive care, parasite control, hygiene, and avoidance of high-risk foods to reduce transmission risk.</p><div class="source-link"><a class="open" href="index/lappin-et-al-2019-2019-aafp-feline-zoonoses-guidelines.pdf" data-passage="The Panelists urge veterinarians to take an active role">Zoonoses</a></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="playbook">
+      <div class="section-head">
+        <h2>Task Index</h2>
+        <p class="note">Use this when you know the problem you are trying to solve.</p>
+      </div>
+      <div class="routes">
+        <article class="route-card"><h3>What and how to feed</h3><ul><li>Complete and balanced diets</li><li>Small meals and foraging</li><li>Weight, body condition, treat calories</li></ul><div class="source-link"><a class="open" href="index/sadek-et-al-2018-feline-feeding-programs-addressing-behavioural-needs-to-improve-feline-health-and-wellbeing.pdf" data-passage="calories from treats should comprise no more than 10%">Feeding</a><a class="open" href="index/quimby-et-al-2021-2021-aaha-aafp-feline-life-stage-guidelines.pdf" data-passage="No matter the life stage, to help avoid potential nutrient insufficiencies">Nutrition stages</a></div></article>
+        <article class="route-card"><h3>Medical prevention</h3><ul><li>Core and non-core vaccines</li><li>Cat friendly visits</li><li>Anesthesia and recovery care</li></ul><div class="source-link"><a class="open" href="index/stone-et-al-2020-2020-aaha-aafp-feline-vaccination-guidelines.pdf" data-passage="Vaccination is a medical procedure">Vaccines</a><a class="open" href="index/rodan-et-al-2022-2022-aafp-isfm-cat-friendly-veterinary-interaction-guidelines-approach-and-handling-techniques.pdf" data-passage="giving them a perceived sense of control">Vet visits</a><a class="open" href="index/robertson-et-al-2018-aafp-feline-anesthesia-guidelines.pdf" data-passage="all cats presented for general anesthesia">Anesthesia</a></div></article>
+        <article class="route-card"><h3>Home environment</h3><ul><li>Litter box size and cleaning</li><li>Hiding, scratching, climbing</li><li>Distributed resources for multi-cat homes</li></ul><div class="source-link"><a class="open" href="index/FelineBehaviorGLS.pdf" data-passage="Detailed information on behavior and environmental enrichment is included">Behavior</a><a class="open" href="index/rodan-et-al-2024-2024-aafp-intercat-tension-guidelines-recognition-prevention-and-management.pdf" data-passage="Signs can be subtle, such as staring or blocking">Multi-cat</a></div></article>
+        <article class="route-card"><h3>Early health signals</h3><ul><li>Urination changes</li><li>Oral pain</li><li>Weight or muscle changes</li></ul><div class="source-link"><a class="open" href="index/Urolithiasis-Consensus-Statement-FINAL.pdf" data-passage="Struvite stones are readily dissolvable">Urinary</a><a class="open" href="index/lobprise-et-al-2025-2025-felinevma-feline-oral-health-and-dental-care-guidelines.pdf" data-passage="a normal appetite does not always equate with a healthy mouth">Oral health</a><a class="open" href="index/quimby-et-al-2021-2021-aaha-aafp-feline-life-stage-guidelines.pdf" data-passage="Record body weight, BCS, and MCS">Exam framework</a></div></article>
+        <article class="route-card"><h3>Mature and senior care</h3><ul><li>Blood pressure and chronic disease screening</li><li>Pain and mobility</li><li>Quality of life and care budget</li></ul><div class="source-link"><a class="open" href="index/ray-et-al-2021-2021-aafp-feline-senior-care-guidelines.pdf" data-passage="Routine assessment facilitates health maintenance and early detection of disease">Senior care</a><a class="open" href="index/taylor-et-al-2024-2024-isfm-and-aafp-consensus-guidelines-on-the-long-term-use-of-nsaids-in-cats.pdf" data-passage="The cat’s unique metabolism should be considered when prescribing any medications">Pain medication</a></div></article>
+        <article class="route-card"><h3>Special risks</h3><ul><li>FIP diagnosis</li><li>Urinary stones</li><li>Zoonotic risk</li></ul><div class="source-link"><a class="open" href="index/thayer-et-al-2022-2022-aafp-everycat-feline-infectious-peritonitis-diagnosis-guidelines.pdf" data-passage="build the index of suspicion 'brick by brick'">FIP</a><a class="open" href="index/Urolithiasis-Consensus-Statement-FINAL.pdf" data-passage="They should be fed as 100% of the cat’s diet">Stones</a><a class="open" href="index/lappin-et-al-2019-2019-aafp-feline-zoonoses-guidelines.pdf" data-passage="The Panelists urge veterinarians to take an active role">Zoonoses</a></div></article>
+      </div>
+    </section>
+
+    <section id="sources">
+      <div class="section-head">
+        <h2>Source File Entrances</h2>
+        <p class="note">Every Q&A links back to these files so you can continue into the original material.</p>
+      </div>
+      <div class="source-grid">
+        <article class="source"><h3>2021 AAHA/AAFP Feline Life Stage Guidelines</h3><p>Care stages, wellness exams, nutrition, elimination, vaccination, and diagnostics.</p><div class="source-link"><a class="open" href="index/quimby-et-al-2021-2021-aaha-aafp-feline-life-stage-guidelines.pdf" data-passage="four distinct age-related stages (kitten, young adult, mature adult, and senior)">PDF</a></div></article>
+        <article class="source"><h3>Feline Feeding Programs</h3><p>Natural feeding behavior, small meals, foraging, and multi-cat feeding.</p><div class="source-link"><a class="open" href="index/sadek-et-al-2018-feline-feeding-programs-addressing-behavioural-needs-to-improve-feline-health-and-wellbeing.pdf" data-passage="Cats are solitary predators that consume small prey">PDF</a></div></article>
+        <article class="source"><h3>Feline Behavior Guidelines</h3><p>Behavioral needs, stress, environment setup, and behavior concerns.</p><div class="source-link"><a class="open" href="index/FelineBehaviorGLS.pdf" data-passage="Detailed information on behavior and environmental enrichment is included">PDF</a></div></article>
+        <article class="source"><h3>2024 Intercat Tension Guidelines</h3><p>Multi-cat tension, resource distribution, new-cat introductions, and behavioral first aid.</p><div class="source-link"><a class="open" href="index/rodan-et-al-2024-2024-aafp-intercat-tension-guidelines-recognition-prevention-and-management.pdf" data-passage="Signs can be subtle, such as staring or blocking">PDF</a></div></article>
+        <article class="source"><h3>2020 Feline Vaccination Guidelines</h3><p>Core vaccines, non-core vaccines, and risk assessment.</p><div class="source-link"><a class="open" href="index/stone-et-al-2020-2020-aaha-aafp-feline-vaccination-guidelines.pdf" data-passage="Vaccination is a medical procedure">PDF</a></div></article>
+        <article class="source"><h3>2025 Oral Health and Dental Care Guidelines</h3><p>Dental disease recognition, anesthetized dentistry, pain, and postoperative support.</p><div class="source-link"><a class="open" href="index/lobprise-et-al-2025-2025-felinevma-feline-oral-health-and-dental-care-guidelines.pdf" data-passage="a normal appetite does not always equate with a healthy mouth">PDF</a></div></article>
+        <article class="source"><h3>2021 Feline Senior Care Guidelines</h3><p>Senior exams, frailty, blood pressure, chronic disease, pain, and quality of life.</p><div class="source-link"><a class="open" href="index/ray-et-al-2021-2021-aafp-feline-senior-care-guidelines.pdf" data-passage="Routine assessment facilitates health maintenance and early detection of disease">PDF</a></div></article>
+        <article class="source"><h3>Urolithiasis Treatment Statement</h3><p>Urinary stone prediction, therapeutic diets, imaging, and minimally invasive options.</p><div class="source-link"><a class="open" href="index/Urolithiasis-Consensus-Statement-FINAL.pdf" data-passage="Struvite stones are readily dissolvable">PDF</a></div></article>
+        <article class="source"><h3>FIP Diagnosis Guidelines</h3><p>Evidence building, test interpretation, and diagnostic workflow for FIP.</p><div class="source-link"><a class="open" href="index/thayer-et-al-2022-2022-aafp-everycat-feline-infectious-peritonitis-diagnosis-guidelines.pdf" data-passage="build the index of suspicion 'brick by brick'">PDF</a></div></article>
+        <article class="source"><h3>Long-term NSAIDs in Cats</h3><p>Chronic pain, joint disease, kidney risk, and medication monitoring.</p><div class="source-link"><a class="open" href="index/taylor-et-al-2024-2024-isfm-and-aafp-consensus-guidelines-on-the-long-term-use-of-nsaids-in-cats.pdf" data-passage="The cat’s unique metabolism should be considered when prescribing any medications">PDF</a></div></article>
+        <article class="source"><h3>Cat Friendly Veterinary Interactions</h3><p>Low-stress visits, perceived control, cooperative care, and examination workflow.</p><div class="source-link"><a class="open" href="index/rodan-et-al-2022-2022-aafp-isfm-cat-friendly-veterinary-interaction-guidelines-approach-and-handling-techniques.pdf" data-passage="giving them a perceived sense of control">PDF</a></div></article>
+        <article class="source"><h3>Feline Zoonoses Guidelines</h3><p>Zoonotic diseases, hygiene strategies, and household risk communication.</p><div class="source-link"><a class="open" href="index/lappin-et-al-2019-2019-aafp-feline-zoonoses-guidelines.pdf" data-passage="The Panelists urge veterinarians to take an active role">PDF</a></div></article>
+      </div>
+    </section>
+
+    <footer>This handbook is for learning and care preparation, not veterinary diagnosis. Urinary blockage, breathing trouble, seizures, poisoning, persistent vomiting, trauma, or prolonged not eating/drinking should go directly to a veterinarian or emergency clinic.</footer>
+  </main>
+
+  <script>
+    document.addEventListener("click", (event) => {
+      const anchor = event.target.closest && event.target.closest("a[href$='.pdf']");
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (!href) return;
+      if (window.parent && window.parent !== window) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        window.parent.postMessage({
+          type: "stashbase-nav",
+          path: href,
+          chunkText: anchor.dataset.passage || undefined,
+          basePath: "cat-parent-handbook-en.html"
+        }, "*");
+      }
+    }, true);
+
+    const storagePrefix = "cat-handbook-en:";
+    document.querySelectorAll("[data-save]").forEach((input) => {
+      const key = storagePrefix + input.dataset.save;
+      input.value = localStorage.getItem(key) || "";
+      input.addEventListener("input", () => localStorage.setItem(key, input.value));
+    });
+
+    const imageKey = storagePrefix + "photo";
+    const preview = document.getElementById("photoPreview");
+    const photoText = document.getElementById("photoText");
+    const photoInput = document.getElementById("photoInput");
+    const photoChange = document.getElementById("photoChange");
+    const cropDialog = document.getElementById("photoCropDialog");
+    const cropStage = document.getElementById("cropStage");
+    const cropImage = document.getElementById("cropImage");
+    const cropScale = document.getElementById("cropScale");
+    const cropCancel = document.getElementById("cropCancel");
+    const cropApply = document.getElementById("cropApply");
+    let crop = { x: 0, y: 0, scale: 1 };
+    let cropDrag = null;
+    let cropNatural = { width: 0, height: 0 };
+
+    function showSavedPhoto(src) {
+      if (!preview || !photoText) return;
+      preview.src = src;
+      preview.style.display = "block";
+      photoText.style.display = "none";
+    }
+
+    const savedImage = localStorage.getItem(imageKey);
+    if (savedImage) showSavedPhoto(savedImage);
+
+    preview?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
+    photoChange?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      photoInput?.click();
+    });
+
+    function updateCropPreview() {
+      if (!cropImage || !cropScale) return;
+      cropImage.style.setProperty("--crop-x", crop.x + "px");
+      cropImage.style.setProperty("--crop-y", crop.y + "px");
+      cropImage.style.setProperty("--crop-scale", String(crop.scale));
+      cropScale.value = String(crop.scale);
+    }
+
+    function openCropper(src) {
+      if (!cropDialog || !cropImage) return;
+      const img = new Image();
+      img.onload = () => {
+        cropNatural = { width: img.naturalWidth, height: img.naturalHeight };
+        crop = { x: 0, y: 0, scale: 1 };
+        cropImage.src = src;
+        cropDialog.classList.add("is-open");
+        cropDialog.setAttribute("aria-hidden", "false");
+        requestAnimationFrame(() => {
+          if (!cropStage || !cropImage) return;
+          const stage = cropStage.getBoundingClientRect();
+          const baseScale = Math.max(stage.width / img.naturalWidth, stage.height / img.naturalHeight);
+          cropImage.style.width = img.naturalWidth * baseScale + "px";
+          cropImage.style.height = img.naturalHeight * baseScale + "px";
+          updateCropPreview();
+        });
+      };
+      img.onerror = () => alert("Could not read this image. Try another photo.");
+      img.src = src;
+    }
+
+    function closeCropper() {
+      cropDialog?.classList.remove("is-open");
+      cropDialog?.setAttribute("aria-hidden", "true");
+      cropDrag = null;
+      if (photoInput) photoInput.value = "";
+    }
+
+    photoInput?.addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => openCropper(String(reader.result || ""));
+      reader.readAsDataURL(file);
+    });
+
+    cropScale?.addEventListener("input", () => {
+      crop.scale = Number(cropScale.value || 1);
+      updateCropPreview();
+    });
+
+    cropStage?.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      cropStage.setPointerCapture(event.pointerId);
+      cropDrag = { id: event.pointerId, startX: event.clientX, startY: event.clientY, x: crop.x, y: crop.y };
+    });
+    cropStage?.addEventListener("pointermove", (event) => {
+      if (!cropDrag || cropDrag.id !== event.pointerId) return;
+      crop.x = cropDrag.x + event.clientX - cropDrag.startX;
+      crop.y = cropDrag.y + event.clientY - cropDrag.startY;
+      updateCropPreview();
+    });
+    cropStage?.addEventListener("pointerup", (event) => {
+      if (cropDrag && cropDrag.id === event.pointerId) cropDrag = null;
+    });
+
+    cropCancel?.addEventListener("click", closeCropper);
+    cropDialog?.addEventListener("click", (event) => {
+      if (event.target === cropDialog) closeCropper();
+    });
+
+    cropApply?.addEventListener("click", () => {
+      if (!cropStage || !cropImage || !cropNatural.width || !cropNatural.height) return;
+      const stage = cropStage.getBoundingClientRect();
+      const displayedW = parseFloat(cropImage.style.width || "0") * crop.scale;
+      const displayedH = parseFloat(cropImage.style.height || "0") * crop.scale;
+      const sourceW = cropNatural.width * stage.width / displayedW;
+      const sourceH = cropNatural.height * stage.height / displayedH;
+      const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+      const sourceX = clamp(
+        cropNatural.width / 2 - (stage.width / 2 + crop.x) * cropNatural.width / displayedW,
+        0,
+        Math.max(0, cropNatural.width - sourceW)
+      );
+      const sourceY = clamp(
+        cropNatural.height / 2 - (stage.height / 2 + crop.y) * cropNatural.height / displayedH,
+        0,
+        Math.max(0, cropNatural.height - sourceH)
+      );
+      const canvas = document.createElement("canvas");
+      canvas.width = 408;
+      canvas.height = 564;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.fillStyle = "#f7eddb";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(cropImage, sourceX, sourceY, sourceW, sourceH, 0, 0, canvas.width, canvas.height);
+      const finalImage = canvas.toDataURL("image/jpeg", 0.9);
+      try { localStorage.setItem(imageKey, finalImage); } catch (_) {}
+      showSavedPhoto(finalImage);
+      closeCropper();
+    });
+  </script>
+</body>
+</html>
